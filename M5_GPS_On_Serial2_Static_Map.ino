@@ -1,7 +1,10 @@
-#include <M5Stack.h>
+#include <ESP32-Chimera-Core.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <HTTPClient.h>
+
+#define ILI9341_DISPON  0x29
+#define ILI9341_DISPOFF 0x28
 
 HardwareSerial gpsSerial = HardwareSerial(2);
 char buffer[256];
@@ -14,9 +17,9 @@ uint8_t zoom = 12; // Set up whatever initial zoom level you like
 String COORDS = "";
 
 void buttons_test() {
-// Button A: decrease zoom
-// Button C: increase zoom
-// Button B: switch display on/off
+  // Button A: decrease zoom
+  // Button C: increase zoom
+  // Button B: switch display on/off
 
   bool needRedraw = false;
   while (M5.BtnA.isPressed()) {
@@ -56,7 +59,8 @@ void drawMap() {
   HTTPClient http;
   Serial.print("[HTTP] begin...\n");
   // Using the MapQuest API. Get your own key!
-  http.begin("https://www.mapquestapi.com/staticmap/v5/map?key=XXXXXXXXXXXXXXXXXXXXX&center=" + COORDS + "&size=320,260&zoom=" + String(zoom) + "&size=@4x&locations=" + COORDS + "|marker-start");
+https://www.mapquestapi.com/staticmap/v5/map?key=sTrRhK8yf4yDrB5r2BIGprc3l3bwgbWd&center=22.459969,114.00457&size=1280,640&zoom=14&size=@2x&locations=22.469969,114.00|flag-lg-7b0099-ping||22.459969,114.00457|marker-start
+  http.begin("https://www.mapquestapi.com/staticmap/v5/map?key=sTrRhK8yf4yDrB5r2BIGprc3l3bwgbWd&center=" + COORDS + "&size=320,260&zoom=" + String(zoom) + "&size=@4x&locations=" + COORDS + "|marker-start");
   Serial.print("[HTTP] GET...");
   // start connection and send HTTP header
   int httpCode = http.GET();
@@ -147,8 +151,8 @@ void setup() {
   Serial.println("\n\n+-----------------------+");
   Serial.println("+      GPS Tester       +");
   Serial.println("+-----------------------+");
-  String wifi_ssid = "YOURSSID";
-  String wifi_password = "YOURPWD";
+  String wifi_ssid = "SecondTry";
+  String wifi_password = "didier0barbas";
   Serial.print("WIFI-SSID: ");
   Serial.println(wifi_ssid);
   Serial.print("WIFI-PASSWD: ");
@@ -207,45 +211,34 @@ void loop() {
         ix++;
         Serial.println("  [ok]");
         // Valid
-        int yx = skipToNext(buffer, '.', ix);
+        int yx = skipToNext(buffer, ',', ix);
         int i;
         String s = "";
         for (i = ix; i < yx; i++) s = s + String(buffer[i]);
-        int Latitude = s.toInt();
-        int Lat1 = Latitude / 100;
-        Serial.print("Latitude: ");
-        int Lat1b = (Latitude - (Lat1 * 100));
-        s = "";
-        yx += 1;
+        float Lat = s.toFloat();
+        int DD = Lat / 100;
+        float SS = Lat - DD * 100;
+        float LatDec = DD + SS / 60;
         ix = skipToNext(buffer, ',', yx);
-        for (i = yx; i < ix; i++)s = s + String(buffer[i]);
-        i += 1;
-        c = buffer[i];
-        i += 2;
-        double Lat2 = s.toInt();
-        Lat2 = Lat1b + (Lat2 / 100000);
-        myLat = Lat1 + Lat2 / 100;
-        myLatText = getdms(myLat, true);
+        s = String(buffer[ix]);
+        if (s == "S") myLat *= -1;
+        Serial.print("Latitude: ");
+        myLatText = getdms(LatDec, true);
         Serial.println(myLatText);
         // Longitude
-        Serial.print("Longitude: ");
-        yx = skipToNext(buffer, '.', i);
+        ix += 3;
+        yx = skipToNext(buffer, ',', ix);
         s = "";
-        for (ix = i; ix < yx; ix++) s = s + String(buffer[ix]);
-        int Lontitude = s.toInt();
-        int Lont1 = Lontitude / 100;
-        int Lont1b = (Lontitude - (Lont1 * 100));
-        s = "";
-        yx = ix + 1;
+        for (i = ix; i < yx; i++) s = s + String(buffer[i]);
+        float Long = s.toFloat();
+        DD = Long / 100;
+        SS = Long - DD * 100;
+        float LongDec = DD + SS / 60;
         ix = skipToNext(buffer, ',', yx);
-        for (i = yx; i < ix; i++) s = s + String(buffer[i]);
-        i += 1;
-        c = buffer[i];
-        i += 2;
-        double Lont2 = s.toInt();
-        Lont2 = Lont1b + (Lont2 / 100000);
-        myLong = Lont1 + Lont2 / 100;
-        myLongText = getdms(myLong, false);
+        s = String(buffer[ix]);
+        if (s == "W") myLong *= -1;
+        Serial.println("Longitude: ");
+        myLongText = getdms(LongDec, true);
         Serial.println(myLongText);
         ix = skipToNext(buffer, ',', yx);
         yx = ix + 1;
@@ -261,7 +254,7 @@ void loop() {
         uint16_t elapsed = (t1 - lastMapDraw) / 1000;
         Serial.println("Time elapsed since last map draw: " + String(elapsed) + " s");
         if (t1 - lastMapDraw > 60000 || noFixSoFar) {
-          COORDS = String(myLat, 6) + "," + String(myLong, 6);
+          COORDS = String(LatDec, 6) + "," + String(LongDec, 6);
           drawMap();
           lastMapDraw = millis();
           noFixSoFar = false;
