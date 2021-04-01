@@ -59,14 +59,14 @@ void drawMap() {
   HTTPClient http;
   Serial.print("[HTTP] begin...\n");
   // Using the MapQuest API. Get your own key!
-https://www.mapquestapi.com/staticmap/v5/map?key=sTrRhK8yf4yDrB5r2BIGprc3l3bwgbWd&center=22.459969,114.00457&size=1280,640&zoom=14&size=@2x&locations=22.469969,114.00|flag-lg-7b0099-ping||22.459969,114.00457|marker-start
-  http.begin("https://www.mapquestapi.com/staticmap/v5/map?key=sTrRhK8yf4yDrB5r2BIGprc3l3bwgbWd&center=" + COORDS + "&size=320,260&zoom=" + String(zoom) + "&size=@4x&locations=" + COORDS + "|marker-start");
+https://www.mapquestapi.com/staticmap/v5/map?key=.............&center=22.459969,114.00457&size=1280,640&zoom=14&size=@2x&locations=22.469969,114.00|flag-lg-7b0099-ping||22.459969,114.00457|marker-start
+  http.begin("https://www.mapquestapi.com/staticmap/v5/map?key=.............&center=" + COORDS + "&size=320,260&zoom=" + String(zoom) + "&size=@4x&locations=" + COORDS + "|marker-start");
   Serial.print("[HTTP] GET...");
   // start connection and send HTTP header
   int httpCode = http.GET();
   // httpCode will be negative on error
   if (httpCode > 0) {
-    // HTTP header has been send and Server response header has been handled
+    // HTTP header has been sent and Server response header has been handled
     Serial.printf(" code: %d\n", httpCode);
     // file found at server
     if (httpCode == 200) {
@@ -136,7 +136,7 @@ String getdms(double ang, bool isLat = true) {
 }
 
 void setup() {
-  lastMapDraw = millis();
+  lastMapDraw = 0;
   Serial.begin(115200);
   delay(1000);
   M5.begin();
